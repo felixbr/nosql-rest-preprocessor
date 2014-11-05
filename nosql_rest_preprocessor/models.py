@@ -8,7 +8,9 @@ class BaseModel(object):
 
     immutable_attributes = []
 
-    non_public_attributes = []
+    private_attributes = []
+
+    sub_models = {}
 
     @classmethod
     def validate(cls, obj):
@@ -17,14 +19,24 @@ class BaseModel(object):
             if attr not in obj.keys():
                 raise exceptions.ValidationError()
 
+        # recurse for sub models
+        for attr, sub_model in cls.sub_models.items():
+            if attr in obj.keys():
+                sub_model.validate(obj[attr])
+
         return obj
 
     @classmethod
     @non_mutating
     def prepare_response(cls, obj):
         # remove non-public attrs
-        for attr in cls.non_public_attributes:
+        for attr in cls.private_attributes:
             obj.pop(attr, None)
+
+        # recurse for sub models
+        for attr, sub_model in cls.sub_models.items():
+            if attr in obj.keys():
+                obj[attr] = sub_model.prepare_response(obj[attr])
 
         return obj
 
@@ -44,6 +56,10 @@ class BaseModel(object):
             cls._check_immutable_attrs_on_update(key, value, db_obj)
 
             merged_obj[key] = value
+
+        # recurse for sub models
+        for attr, sub_model in cls.sub_models.items():
+            merged_obj[attr] = sub_model.merge_updated(db_obj[attr], new_obj[attr])
 
         return merged_obj
 

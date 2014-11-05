@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 from nosql_rest_preprocessor.models import BaseModel
 from nosql_rest_preprocessor import exceptions
+from copy import deepcopy
 import pytest
 
 
@@ -10,14 +11,26 @@ class EmptyModel(BaseModel):
 
 class ModelA(BaseModel):
     required_attributes = {'A'}
-
     immutable_attributes = {'A'}
-
-    non_public_attributes = {'A'}
+    private_attributes = {'A'}
 
 
 class ModelB(BaseModel):
     immutable_attributes = {'A'}
+
+
+class AddressModel(BaseModel):
+    required_attributes = {'street', 'city', 'plz'}
+    private_attributes = {'wifiPassword'}
+    immutable_attributes = {'planet'}
+
+
+class PersonModel(BaseModel):
+    required_attributes = {'name', 'email'}
+
+    sub_models = {
+        'address': AddressModel
+    }
 
 
 # noinspection PyMethodMayBeStatic
@@ -38,6 +51,18 @@ class TestValidate(object):
         with pytest.raises(exceptions.ValidationError):
             ModelA.validate(some_obj)
 
+    def test_nested_parsing(self):
+        person_obj = {
+            'name': 'Sepp Huber',
+            'email': 'sepp.huber@fancypants.com',
+            'address': {
+                'street': 'Bakerstreet',
+                'city': 'London'
+            }
+        }
+        with pytest.raises(exceptions.ValidationError):
+            PersonModel.validate(person_obj)
+
 
 # noinspection PyMethodMayBeStatic
 class TestPrepareResponse(object):
@@ -49,6 +74,19 @@ class TestPrepareResponse(object):
         some_obj = {'A': 'Something'}
         assert ModelA.prepare_response(some_obj) == {}
         assert 'A' in some_obj
+
+    def test_nested_responses(self):
+        person_obj = {
+            'name': 'Sepp Huber',
+            'email': 'sepp.huber@fancypants.com',
+            'address': {
+                'street': 'Bakerstreet',
+                'city': 'London',
+                'plz': '12345',
+                'wifiPassword': 'thecakeisalie'
+            }
+        }
+        assert 'wifiPassword' not in PersonModel.prepare_response(person_obj)['address']
 
 
 # noinspection PyMethodMayBeStatic
@@ -91,5 +129,29 @@ class TestMergeUpdated(object):
         with pytest.raises(exceptions.ChangingImmutableAttributeError):
             ModelB.merge_updated(db_obj, new_obj)
 
+    def test_nested_immutability(self):
+        person_obj = {
+            'name': 'Sepp Huber',
+            'email': 'sepp.huber@fancypants.com',
+            'address': {
+                'street': 'Bakerstreet',
+                'city': 'London',
+                'plz': '12345',
+                'planet': 'Earth'
+            }
+        }
+        new_obj = deepcopy(person_obj)
+        assert person_obj is not new_obj
+        new_obj['address']['planet'] = 'Mars'
+
+        assert person_obj != new_obj
+        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+            PersonModel.merge_updated(person_obj, new_obj)
+
+        new_obj['address'].pop('planet', None)
+
+        assert person_obj != new_obj
+        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+            PersonModel.merge_updated(person_obj, new_obj)
 
 
