@@ -26,7 +26,12 @@ class UserModel(BaseModel):
 new_user_from_request = {
     "firstName": "Sepp",
     "lastName": "Huber",
-    "email": "sepp.huber@fancepants.com"
+    "email": "sepp.huber@fancepants.com",
+    "address": {
+        "street": "Bakerstreet 1",
+        "city": "London",
+        "plz": "12345"
+    }
 }
 
 # checks required_attributes and raises ValidationError if something's amiss
