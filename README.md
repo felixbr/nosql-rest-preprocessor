@@ -70,5 +70,5 @@ user = {
 }
 
 resolved_obj = resolve(UserModel, user)
-# resolved_obj['address'] is now the obj fetched by SomeDB.find_address_by_key('foreign_key_for_address')
+# resolved_obj['address'] is now replaced by the dict fetched by SomeDB.find_address_by_key('foreign_key_for_address')
 ```
