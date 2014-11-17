@@ -12,6 +12,8 @@ class BaseModel(object):
 
     sub_models = {}
 
+    resolved_attributes = {}
+
     @classmethod
     def validate(cls, obj):
         # check required attrs
@@ -55,7 +57,10 @@ class BaseModel(object):
         for key, value in new_obj.items():
             cls._check_immutable_attrs_on_update(key, value, db_obj)
 
-            merged_obj[key] = value
+            if key in cls.resolved_attributes and isinstance(value, dict):  # ignore resolved attributes in update
+                merged_obj[key] = db_obj[key]
+            else:
+                merged_obj[key] = value
 
         # recurse for sub models
         for attr, sub_model in cls.sub_models.items():

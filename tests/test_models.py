@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from nosql_rest_preprocessor.models import BaseModel
 from nosql_rest_preprocessor import exceptions
 from copy import deepcopy
-import pytest
+from pytest import raises
 
 
 class EmptyModel(BaseModel):
@@ -37,7 +37,7 @@ class PersonModel(BaseModel):
 class TestValidate(object):
 
     def test_empty_obj(self):
-        with pytest.raises(exceptions.ValidationError):
+        with raises(exceptions.ValidationError):
             ModelA.validate({})
 
     def test_objs(self):
@@ -48,7 +48,7 @@ class TestValidate(object):
         assert ModelA.validate(some_obj) == some_obj
 
         del some_obj['A']
-        with pytest.raises(exceptions.ValidationError):
+        with raises(exceptions.ValidationError):
             ModelA.validate(some_obj)
 
     def test_nested_parsing(self):
@@ -60,7 +60,7 @@ class TestValidate(object):
                 'city': 'London'
             }
         }
-        with pytest.raises(exceptions.ValidationError):
+        with raises(exceptions.ValidationError):
             PersonModel.validate(person_obj)
 
 
@@ -103,7 +103,7 @@ class TestMergeUpdated(object):
         db_obj = {'A': 'something'}
         new_obj = {'A': 'SOMETHING'}
 
-        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+        with raises(exceptions.ChangingImmutableAttributeError):
             ModelA.merge_updated(db_obj, new_obj)
 
     def test_adding_attrs(self):
@@ -115,7 +115,7 @@ class TestMergeUpdated(object):
         assert 'B' in merged_obj
 
         new_obj = {'B': 'else'}
-        with pytest.raises(exceptions.ValidationError):
+        with raises(exceptions.ValidationError):
             ModelA.merge_updated({}, new_obj)
 
     def test_deleting_attrs(self):
@@ -126,7 +126,7 @@ class TestMergeUpdated(object):
         assert merged_obj == new_obj
 
         new_obj = {'B': 'else'}  # deleting immutable attribute!
-        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+        with raises(exceptions.ChangingImmutableAttributeError):
             ModelB.merge_updated(db_obj, new_obj)
 
     def test_nested_immutability(self):
@@ -145,13 +145,13 @@ class TestMergeUpdated(object):
         new_obj['address']['planet'] = 'Mars'
 
         assert person_obj != new_obj
-        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+        with raises(exceptions.ChangingImmutableAttributeError):
             PersonModel.merge_updated(person_obj, new_obj)
 
         new_obj['address'].pop('planet', None)
 
         assert person_obj != new_obj
-        with pytest.raises(exceptions.ChangingImmutableAttributeError):
+        with raises(exceptions.ChangingImmutableAttributeError):
             PersonModel.merge_updated(person_obj, new_obj)
 
 
