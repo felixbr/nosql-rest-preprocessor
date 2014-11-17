@@ -49,7 +49,7 @@ class PersonModel2(BaseModel):
     required_attributes = {'name', 'email'}
 
     resolved_attributes = {
-        'address': ResolveWith(lookup_class=MockDao, lookup_func=MockDao.find_address_by_key, model=AddressModel),
+        'address': ResolveWith(lookup_func=MockDao.find_address_by_key, model=AddressModel),
         'company': ResolveWith(find_address_by_key)  # should use sub_model to find model as fallback
     }
 

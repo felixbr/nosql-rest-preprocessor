@@ -1,12 +1,10 @@
 from __future__ import absolute_import, unicode_literals
-from collections import namedtuple
 from nosql_rest_preprocessor import exceptions
 
 
 class ResolveWith(object):
 
-    def __init__(self, lookup_func, lookup_class=None, model=None):
-        self.lookup_class = lookup_class
+    def __init__(self, lookup_func, model=None):
         self.lookup_func = lookup_func
         self.model = model
 
@@ -24,12 +22,7 @@ def resolve(model, obj, depth=1, fail_fast=False):
             attr_config = model.resolved_attributes[attr]  # config for attribute
 
             if isinstance(attr_config, ResolveWith):
-                if attr_config.lookup_class is not None:
-                    lookup_obj = attr_config.lookup_class()
-                    resolved_obj = getattr(lookup_obj, attr_config.lookup_func.__name__)(old_value)
-                else:
-                    resolved_obj = attr_config.lookup_func(old_value)
-
+                resolved_obj = attr_config.lookup_func(old_value)
             else:
                 resolved_obj = attr_config(old_value)  # in case a function was passed directly
 
