@@ -14,45 +14,42 @@ class ResolveWith(object):
 def resolve(model, obj, depth=1, fail_fast=False):
     depth = min(depth, 3)  # don't resolve infinitely
 
-    def resolve_recursively(old_obj, current_model, current_depth):
-        if current_depth <= 0:
-            return old_obj
+    if depth <= 0:
+        return obj
 
-        new_obj = {}
-        for attr, old_value in old_obj.items():
-            if attr in current_model.resolved_attributes:
+    new_obj = {}
+    for attr, old_value in obj.items():
+        if attr in model.resolved_attributes:
 
-                attr_config = current_model.resolved_attributes[attr]  # config for attribute
+            attr_config = model.resolved_attributes[attr]  # config for attribute
 
-                if isinstance(attr_config, ResolveWith):
-                    if attr_config.lookup_class is not None:
-                        lookup_obj = attr_config.lookup_class()
-                        resolved_obj = getattr(lookup_obj, attr_config.lookup_func.__name__)(old_value)
-                    else:
-                        resolved_obj = attr_config.lookup_func(old_value)
-
+            if isinstance(attr_config, ResolveWith):
+                if attr_config.lookup_class is not None:
+                    lookup_obj = attr_config.lookup_class()
+                    resolved_obj = getattr(lookup_obj, attr_config.lookup_func.__name__)(old_value)
                 else:
-                    resolved_obj = attr_config(old_value)  # in case a function was passed directly
+                    resolved_obj = attr_config.lookup_func(old_value)
 
-                if not resolved_obj:
-                    if fail_fast:
-                        raise exceptions.ResolvedObjectNotFound(message='Could not find object with id %s for attribute %s' % (old_value, attr))
-                    else:
-                        new_obj[attr] = old_value
-                        continue  # leave id unresolved and go on
-
-                resolving_model = attr_config.model or current_model.sub_models[attr]
-                # remove private attributes
-                resolved_obj = resolving_model.prepare_response(resolved_obj)
-
-                # resolveception
-                resolved_obj = resolve_recursively(resolved_obj, resolving_model, current_depth - 1)
-
-                # save resolved attribute
-                new_obj[attr] = resolved_obj
             else:
-                new_obj[attr] = old_value
+                resolved_obj = attr_config(old_value)  # in case a function was passed directly
 
-        return new_obj
+            if not resolved_obj:
+                if fail_fast:
+                    raise exceptions.ResolvedObjectNotFound(message='Could not find object with id %s for attribute %s' % (old_value, attr))
+                else:
+                    new_obj[attr] = old_value
+                    continue  # leave id unresolved and go on
 
-    return resolve_recursively(obj, model, depth)
+            resolving_model = attr_config.model or model.sub_models[attr]
+            # remove private attributes
+            resolved_obj = resolving_model.prepare_response(resolved_obj)
+
+            # resolveception
+            resolved_obj = resolve(resolving_model, resolved_obj, depth - 1)
+
+            # save resolved attribute
+            new_obj[attr] = resolved_obj
+        else:
+            new_obj[attr] = old_value
+
+    return new_obj
