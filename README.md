@@ -3,6 +3,12 @@ nosql-rest-preprocessor
 
 A middleware module which solves common problems when building rest-apis with nosql databases.
 
+### Installation
+
+```
+pip install nosql-rest-preprocessor
+```
+
 ### Examples
 
 ```python
