@@ -16,6 +16,10 @@ from nosql-rest-preprocessor.models import BaseModel
 
 class AddressModel(BaseModel):
     required_attributes = {'street', 'city', 'plz'}
+    
+    # if you specify optional attributes explicitely, it will 
+    # not allow anything but these and the required ones
+    optional_attributes = {'location'}
 
 class UserModel(BaseModel):
     required_attributes = {'firstName', 'lastName', 'email'}
