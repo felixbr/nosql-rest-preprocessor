@@ -1,12 +1,27 @@
 from __future__ import absolute_import, unicode_literals
 from nosql_rest_preprocessor import exceptions
+from inspect import isclass
 
 
 class ResolveWith(object):
 
-    def __init__(self, lookup_func, model=None):
+    def lookup(self, key):
+        if self.lookup_class:
+            if isclass(self.lookup_class):
+                lookup_obj = self.lookup_class(**self.lookup_class_kwargs)
+            else:
+                lookup_obj = self.lookup_class
+
+            return self.lookup_func(lookup_obj, key)  # uses the instantiated obj and its method to lookup by key
+        else:
+            return self.lookup_func(key)  # lookup directly
+
+    def __init__(self, lookup_func, model=None, lookup_class=None, **lookup_class_kwargs):
         self.lookup_func = lookup_func
         self.model = model
+
+        self.lookup_class = lookup_class
+        self.lookup_class_kwargs = lookup_class_kwargs
 
 
 def resolve(model, obj, depth=1, fail_fast=False):
@@ -22,7 +37,7 @@ def resolve(model, obj, depth=1, fail_fast=False):
             attr_config = model.resolved_attributes[attr]  # config for attribute
 
             if isinstance(attr_config, ResolveWith):
-                resolved_obj = attr_config.lookup_func(old_value)
+                resolved_obj = attr_config.lookup(old_value)
             else:
                 resolved_obj = attr_config(old_value)  # in case a function was passed directly
 

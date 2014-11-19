@@ -23,6 +23,22 @@ class MockDao(object):
         return find_address_by_key(key)  # just delegate
 
 
+class MockDBConnection(object):
+
+    # noinspection PyMethodMayBeStatic
+    def get(self, key):
+        return find_address_by_key(key)  # just delegate
+
+
+class MockDaoWithConnection(object):
+
+    def __init__(self, connection):
+        self.connection = connection
+
+    def find_address_by_key(self, key):
+        return self.connection.get(key)
+
+
 class AddressModel(BaseModel):
     required_attributes = {'street', 'city', 'plz'}
     private_attributes = {'openWifi'}
@@ -55,6 +71,24 @@ class PersonModel2(BaseModel):
 
     sub_models = {
         'company': CompanyModel
+    }
+
+
+class PersonModel3(BaseModel):
+    connection = MockDBConnection()
+
+    resolved_attributes = {
+        'address': ResolveWith(MockDaoWithConnection.find_address_by_key, model=AddressModel,
+                               lookup_class=MockDaoWithConnection, **{'connection': connection})
+    }
+
+
+class PersonModel4(BaseModel):
+    dao = MockDaoWithConnection(MockDBConnection())
+
+    resolved_attributes = {
+        'address': ResolveWith(MockDaoWithConnection.find_address_by_key, model=AddressModel,
+                               lookup_class=dao)
     }
 
 
@@ -107,6 +141,10 @@ class TestResolve(object):
         assert 'openWifi' not in resolved_obj['address']
         assert 'openWifi' not in resolved_obj['company']['address']
 
+        # clean up
+        del address_obj1['openWifi']
+        del address_obj2['openWifi']
+
     @pytest.mark.randomize(person={
         'name': unicode, 'email': unicode, 'company': unicode
     })
@@ -124,3 +162,11 @@ class TestResolve(object):
 
         assert merged_obj['company'] == person_obj['company']
         assert merged_obj['address'] == person_obj['address']
+
+    def test_lookup_class(self):
+        resolved_obj = resolve(PersonModel3, person_obj)  # use a lookup_class
+        assert resolved_obj['address'] == address_obj1
+
+        resolved_obj = resolve(PersonModel4, person_obj)  # use an object of a class
+        assert resolved_obj['address'] == address_obj1
+
