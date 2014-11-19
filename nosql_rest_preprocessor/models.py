@@ -4,11 +4,13 @@ from nosql_rest_preprocessor.utils import non_mutating
 
 
 class BaseModel(object):
-    required_attributes = []
+    required_attributes = set()
 
-    immutable_attributes = []
+    optional_attributes = None
 
-    private_attributes = []
+    immutable_attributes = set()
+
+    private_attributes = set()
 
     sub_models = {}
 
@@ -20,6 +22,13 @@ class BaseModel(object):
         for attr in cls.required_attributes:
             if attr not in obj.keys():
                 raise exceptions.ValidationError()
+
+        # check allowed attributes
+        if cls.optional_attributes is not None:
+            whitelist = set(cls.required_attributes).union(cls.optional_attributes)
+            for attr in obj.keys():
+                if attr not in whitelist:
+                    raise exceptions.ValidationError()
 
         # recurse for sub models
         for attr, sub_model in cls.sub_models.items():

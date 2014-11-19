@@ -33,6 +33,11 @@ class PersonModel(BaseModel):
     }
 
 
+class CompanyModel(BaseModel):
+    required_attributes = {'name'}
+    optional_attributes = {'address'}
+
+
 # noinspection PyMethodMayBeStatic
 class TestValidate(object):
 
@@ -62,6 +67,17 @@ class TestValidate(object):
         }
         with raises(exceptions.ValidationError):
             PersonModel.validate(person_obj)
+
+    def test_whitelisting(self):
+        company_obj = {
+            'name': 'Continental',
+            'address': 'foreign_key_123'
+        }
+        CompanyModel.validate(company_obj)
+
+        company_obj['city'] = 'Ratisbon'
+        with raises(exceptions.ValidationError):
+            CompanyModel.validate(company_obj)
 
 
 # noinspection PyMethodMayBeStatic
