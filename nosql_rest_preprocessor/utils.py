@@ -1,4 +1,5 @@
-from __future__ import absolute_import
+from __future__ import absolute_import, unicode_literals, print_function, division
+
 from functools import wraps
 from copy import deepcopy
 
@@ -6,7 +7,7 @@ from copy import deepcopy
 def map_if_list(func, potential_list):
 
     if isinstance(potential_list, list):
-        return map(func, potential_list)
+        return list(map(func, potential_list))  # list() is needed in Python3.x as it returns an iterator
     elif isinstance(potential_list, dict):
         return func(potential_list)
 

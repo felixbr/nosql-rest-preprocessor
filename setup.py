@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from distutils.core import setup
+from setuptools import setup
+from io import open
 
-version = open('VERSION', 'r').read().strip()
+version = open('VERSION', 'r', encoding='utf-8').read().strip()
 
 setup(
   name = 'nosql-rest-preprocessor',
@@ -15,5 +16,6 @@ setup(
   download_url = 'https://github.com/felixbr/nosql-rest-preprocessor/tarball/%s' % version,
   keywords = ['nosql', 'rest', 'web', 'middleware'],
   classifiers = [],
-  license='MIT',
+  license = 'MIT',
+  install_requires = []
 )

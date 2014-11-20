@@ -1,4 +1,4 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, unicode_literals, division, print_function
 
 from nosql_rest_preprocessor.resolvers import resolve, ResolveWith
 from nosql_rest_preprocessor.models import BaseModel
@@ -146,7 +146,7 @@ class TestResolve(object):
         del address_obj2['openWifi']
 
     @pytest.mark.randomize(person={
-        'name': unicode, 'email': unicode, 'company': unicode
+        'name': str, 'email': str, 'company': str
     })
     def test_failing_fast(self, person):
         resolved_obj = resolve(PersonModel1, person)
@@ -169,4 +169,3 @@ class TestResolve(object):
 
         resolved_obj = resolve(PersonModel4, person_obj)  # use an object of a class
         assert resolved_obj['address'] == address_obj1
-
