@@ -1,4 +1,4 @@
-nosql-rest-preprocessor
+NoSQL Rest Preprocessor
 =======================
 
 A middleware module which solves common problems when building rest-apis with nosql databases.
@@ -81,4 +81,11 @@ user = {
 
 resolved_obj = resolve(UserModel, user)
 # resolved_obj['address'] is now replaced by the dict fetched by SomeDB.find_address_by_key('foreign_key_for_address')
+```
+
+### Running tests
+```
+pip install detox
+
+detox
 ```
