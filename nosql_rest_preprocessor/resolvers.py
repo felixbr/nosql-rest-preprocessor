@@ -49,7 +49,11 @@ def resolve(model, obj, depth=1, fail_fast=False):
                     new_obj[attr] = old_value
                     continue  # leave id unresolved and go on
 
-            resolving_model = attr_config.model or model.sub_models[attr]
+            try:
+                resolving_model = attr_config.model
+            except AttributeError:
+                resolving_model = model.sub_models[attr]
+
             # remove private attributes
             resolved_obj = resolving_model.prepare_response(resolved_obj)
 

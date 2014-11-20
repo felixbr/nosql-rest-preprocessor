@@ -66,7 +66,7 @@ class PersonModel2(BaseModel):
 
     resolved_attributes = {
         'address': ResolveWith(lookup_func=MockDao.find_address_by_key, model=AddressModel),
-        'company': ResolveWith(find_address_by_key)  # should use sub_model to find model as fallback
+        'company': find_address_by_key  # should use sub_model to find model as fallback
     }
 
     sub_models = {
