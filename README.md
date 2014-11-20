@@ -1,6 +1,7 @@
 NoSQL Rest Preprocessor
 =======================
 [![Build Status](https://travis-ci.org/felixbr/nosql-rest-preprocessor.svg?branch=master)](https://travis-ci.org/felixbr/nosql-rest-preprocessor)
+[![Coverage Status](https://img.shields.io/coveralls/felixbr/nosql-rest-preprocessor.svg)](https://coveralls.io/r/felixbr/nosql-rest-preprocessor)
 
 A middleware module which solves common problems when building rest-apis with nosql databases.
 
