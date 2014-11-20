@@ -85,9 +85,34 @@ resolved_obj = resolve(UserModel, user)
 # resolved_obj['address'] is now replaced by the dict fetched by SomeDB.find_address_by_key('foreign_key_for_address')
 ```
 
+```python
+from nosql-rest-preprocessor.utils import one_of, all_of, either_of
+
+# use helper methods to define attribute validation more precisely
+class SomeModel(BaseModel):
+    required_attributes = {
+        'A',
+        one_of('B', 'C'),
+        either_of('D', 'E')
+    }
+    
+    optional_attributes = {
+        all_of('F', 'G'),
+        either_of('H', 'I')
+    }
+```
+
 ### Running tests
 ```
 pip install detox
+```
 
+##### Run tests for multiple python versions in parallel
+```
 detox
+```
+
+##### Check branch coverage
+```
+tox -e coverage
 ```
