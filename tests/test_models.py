@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 from nosql_rest_preprocessor.models import BaseModel
+from nosql_rest_preprocessor.utils import *
 from nosql_rest_preprocessor import exceptions
 from copy import deepcopy
 from pytest import raises
@@ -17,6 +18,18 @@ class ModelA(BaseModel):
 
 class ModelB(BaseModel):
     immutable_attributes = {'A'}
+
+
+class ModelC(BaseModel):
+    required_attributes = {
+        one_of('A', 'B'),
+        either_of('C', 'D')
+    }
+
+    optional_attributes = {
+        all_of('E', 'F'),
+        either_of('G', 'H')
+    }
 
 
 class AddressModel(BaseModel):
@@ -78,6 +91,56 @@ class TestValidate(object):
         company_obj['city'] = 'Ratisbon'
         with raises(exceptions.ValidationError):
             CompanyModel.validate(company_obj)
+
+    def test_one_of(self):
+        some_obj = {
+            'C': 'more'
+        }
+        with raises(exceptions.ValidationError):  # one_of('A', 'B')
+            ModelC.validate(some_obj)
+
+        some_obj['A'] = 'something'  # one_of('A', 'B')
+        ModelC.validate(some_obj)
+
+        some_obj['B'] = 'something else'  # one_of('A', 'B')
+        ModelC.validate(some_obj)         # still fine
+
+        some_obj['D'] = 'even more'  # either_of('C', 'D'), now we have both!
+        with raises(exceptions.ValidationError):
+            ModelC.validate(some_obj)
+        del some_obj['D']
+
+        some_obj['E'] = 'one of two'  # all_of('E', 'F')
+        with raises(exceptions.ValidationError):
+            ModelC.validate(some_obj)
+
+        some_obj['F'] = 'two of two'  # all_of('E', 'F')
+        ModelC.validate(some_obj)
+
+        some_obj['G'] = 'one of either'  # either_of('G', 'H')
+        ModelC.validate(some_obj)
+
+        some_obj['H'] = 'two of either'  # either_of('G', 'H')
+        with raises(exceptions.ValidationError):
+            ModelC.validate(some_obj)
+
+        del some_obj['G']  # either_of('G', 'H'), works again
+        ModelC.validate(some_obj)
+
+    def test_config_error(self):
+        class ErrorModel(BaseModel):
+            required_attributes = {
+                ('many_of', ('apple', 'pie'))
+            }
+        with raises(exceptions.ConfigurationError):
+            ErrorModel.validate({})
+
+        class ErrorModel2(BaseModel):
+            optional_attributes = {
+                ('many_of', ('apple', 'pie'))
+            }
+        with raises(exceptions.ConfigurationError):
+            ErrorModel2.validate({'apple': 'red'})
 
 
 # noinspection PyMethodMayBeStatic
@@ -169,5 +232,3 @@ class TestMergeUpdated(object):
         assert person_obj != new_obj
         with raises(exceptions.ChangingImmutableAttributeError):
             PersonModel.merge_updated(person_obj, new_obj)
-
-

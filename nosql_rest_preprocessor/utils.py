@@ -21,3 +21,15 @@ def non_mutating(f):
         return f(*copied_args, **copied_kwargs)
 
     return wrapper
+
+
+def all_of(*attributes):
+    return 'all_of', attributes
+
+
+def one_of(*attributes):
+    return 'one_of', attributes
+
+
+def either_of(*attributes):
+    return 'either_of', attributes

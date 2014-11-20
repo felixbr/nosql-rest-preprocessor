@@ -12,3 +12,7 @@ class ChangingImmutableAttributeError(Exception):
 class ResolvedObjectNotFound(Exception):
     def __init__(self, message=''):
         self.message = message.capitalize() or 'Could not find object to resolve to'
+
+
+class ConfigurationError(Exception):
+    pass

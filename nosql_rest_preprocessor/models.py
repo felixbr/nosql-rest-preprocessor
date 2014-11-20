@@ -19,17 +19,9 @@ class BaseModel(object):
 
     @classmethod
     def validate(cls, obj):
-        # check required attrs
-        for attr in cls.required_attributes:
-            if attr not in obj.keys():
-                raise exceptions.ValidationError()
+        cls._check_required_attributes(obj)
 
-        # check allowed attributes
-        if cls.optional_attributes is not None:
-            whitelist = set(cls.required_attributes).union(cls.optional_attributes)
-            for attr in obj.keys():
-                if attr not in whitelist:
-                    raise exceptions.ValidationError()
+        cls._check_allowed_attributes(obj)
 
         # recurse for sub models
         for attr, sub_model in cls.sub_models.items():
@@ -84,3 +76,75 @@ class BaseModel(object):
         if key in cls.immutable_attributes:
             if db_obj[key] != value:
                 raise exceptions.ChangingImmutableAttributeError()
+
+    @classmethod
+    def _check_required_attributes(cls, obj):
+        for attr in cls.required_attributes:
+            if isinstance(attr, tuple):
+                set_wanted = set(attr[1])
+                set_contained = set(obj.keys())
+
+                if attr[0] == 'one_of':
+                    if len(set_wanted & set_contained) < 1:
+                        raise exceptions.ValidationError()
+
+                elif attr[0] == 'either_of':
+                    if len(set_wanted & set_contained) != 1:
+                        raise exceptions.ValidationError()
+
+                else:
+                    raise exceptions.ConfigurationError()
+
+            else:
+                if attr not in obj.keys():
+                    raise exceptions.ValidationError()
+
+    @classmethod
+    def _check_allowed_attributes(cls, obj):
+        if cls.optional_attributes is not None:
+            required = cls._required_attributes()
+
+            for attr in obj.keys():
+                if attr in required:
+                    continue
+
+                allowed = False
+                for opt_attr in cls.optional_attributes:
+                    if attr == opt_attr:
+                        allowed = True
+                        break
+
+                    elif isinstance(opt_attr, tuple):
+
+                        if opt_attr[0] == 'all_of':
+                            if attr in opt_attr[1]:  # if one of these is in obj.keys()...
+                                if not set(opt_attr[1]).issubset(obj.keys()):  # ...all of them have to be there
+                                    raise exceptions.ValidationError()
+                                else:
+                                    allowed = True
+                                    break
+
+                        elif opt_attr[0] == 'either_of':
+                            if attr in opt_attr[1]:  # if one of these is in obj.keys()...
+                                if next((key for key in opt_attr[1] if key != attr and key in obj.keys()), None):  # ...no other key may be present in obj.keys()
+                                    raise exceptions.ValidationError()
+                                else:
+                                    allowed = True
+                                    break
+
+                        else:
+                            raise exceptions.ConfigurationError()
+
+                if not allowed:  # if we haven't found attr anywhere in cls.optional_attributes
+                    raise exceptions.ValidationError()
+
+    @classmethod
+    def _required_attributes(cls):
+        required = set()
+        for attr in cls.required_attributes:
+            if isinstance(attr, tuple):
+                required = required | set(attr[1])
+            else:
+                required.add(attr)
+
+        return required

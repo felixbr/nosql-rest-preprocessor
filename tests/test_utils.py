@@ -1,5 +1,5 @@
 from __future__ import absolute_import, unicode_literals
-from nosql_rest_preprocessor.utils import map_if_list, non_mutating
+from nosql_rest_preprocessor.utils import *
 
 
 class TestMapIfList(object):
@@ -48,3 +48,16 @@ class TestNonMutating(object):
         assert a is not b
         assert a['A'] == 'something'
         assert b['A'] == 'SOMETHING'
+
+
+# noinspection PyMethodMayBeStatic
+class TestTuples(object):
+
+    def test_all_of(self):
+        assert all_of('phoneCarrier', 'phoneModel') == ('all_of', ('phoneCarrier', 'phoneModel'))
+
+    def test_one_of(self):
+        assert one_of('backgroundImg', 'backgroundUrl') == ('one_of', ('backgroundImg', 'backgroundUrl'))
+
+    def test_either_of(self):
+        assert either_of('sweets', 'bacon') == ('either_of', ('sweets', 'bacon'))
