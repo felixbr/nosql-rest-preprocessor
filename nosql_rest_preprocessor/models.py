@@ -13,6 +13,8 @@ class BaseModel(object):
 
     private_attributes = set()
 
+    attribute_policies = {}
+
     sub_models = {}
 
     resolved_attributes = {}

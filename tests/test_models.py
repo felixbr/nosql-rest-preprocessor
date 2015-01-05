@@ -2,6 +2,7 @@ from __future__ import absolute_import, unicode_literals
 from nosql_rest_preprocessor.models import BaseModel
 from nosql_rest_preprocessor.utils import *
 from nosql_rest_preprocessor import exceptions
+from nosql_rest_preprocessor.validation.rules import *
 from copy import deepcopy
 from pytest import raises
 
@@ -11,13 +12,15 @@ class EmptyModel(BaseModel):
 
 
 class ModelA(BaseModel):
-    required_attributes = {'A'}
-    immutable_attributes = {'A'}
-    private_attributes = {'A'}
+    attribute_policies = {
+        'A': [required, immutable, private]
+    }
 
 
 class ModelB(BaseModel):
-    immutable_attributes = {'A'}
+    attribute_policies = {
+        'A': [immutable]
+    }
 
 
 class ModelC(BaseModel):
@@ -33,13 +36,21 @@ class ModelC(BaseModel):
 
 
 class AddressModel(BaseModel):
-    required_attributes = {'street', 'city', 'plz'}
-    private_attributes = {'wifiPassword'}
-    immutable_attributes = {'planet'}
+    attribute_policies = {
+        'street': [required],
+        'city': [required],
+        'plz': [required],
+        'wifiPassword': [private],
+        'planet': [immutable]
+    }
 
 
 class PersonModel(BaseModel):
-    required_attributes = {'name', 'email'}
+    attribute_policies = {
+        'name': [required],
+        'email': [required, valid_email],
+        'address': []
+    }
 
     sub_models = {
         'address': AddressModel
@@ -49,6 +60,11 @@ class PersonModel(BaseModel):
 class CompanyModel(BaseModel):
     required_attributes = {'name'}
     optional_attributes = {'address'}
+
+    attribute_policies = {
+        'name': [required],
+        'address': []
+    }
 
 
 # noinspection PyMethodMayBeStatic
