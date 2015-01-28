@@ -44,7 +44,7 @@ def js_list_of(list_type):
 
 @rule_context(VALIDATION)
 def valid_email(key, value):
-    if not '@' in value:
+    if '@' not in value:
         raise ValidationError()
 
 
